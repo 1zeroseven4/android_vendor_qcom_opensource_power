@@ -280,51 +280,11 @@ double PowerHintSessionImpl::nextSupportedFPS(double fps) {
 }
 
 ndk::ScopedAStatus PowerHintSessionImpl::updateTargetWorkDuration(int64_t in_targetDurationNanos) {
-    // TODO: top app is game check
-    LOG(INFO) << "PowerHintSessionImpl::updateTargetWorkDuration: " << in_targetDurationNanos;
-    if (in_targetDurationNanos <= 0) {
-        LOG(ERROR) << "Invalid target work duration";
-        return ndk::ScopedAStatus::fromExceptionCode(EX_ILLEGAL_ARGUMENT);
-    }
-    mTargetWorkDurationNanos = in_targetDurationNanos;
-    mThresholdNanos = mTargetWorkDurationNanos - (mTargetWorkDurationNanos / 8);
-    double durationInSeconds = static_cast<double>(mTargetWorkDurationNanos) / 1'000'000'000.0;
-    double calculatedFps = 1.0 / durationInSeconds;
-    double supportedFps = nextSupportedFPS(calculatedFps);
-    // TODO: Relegate(EngineHints::EH_RENDER_RATE, mTopAppName, supportedFps, 1);
-    // TODO: TFPS
     return ndk::ScopedAStatus::ok();
 }
 
 ndk::ScopedAStatus PowerHintSessionImpl::reportActualWorkDuration(
         const std::vector<::aidl::android::hardware::power::WorkDuration>& in_durations) {
-    // TODO: top app is game check
-    LOG(INFO) << "PowerHintSessionImpl::reportActualWorkDuration: ";
-    int64_t targetWorkDurationNanos = mTargetWorkDurationNanos;
-    if (targetWorkDurationNanos == -1 || in_durations.empty()) {
-        return ndk::ScopedAStatus::ok();
-    }
-    int64_t actualWorkDurationNanos = in_durations[0].durationNanos;
-    for (const auto& duration : in_durations) {
-        if (duration.durationNanos > actualWorkDurationNanos) {
-            actualWorkDurationNanos = duration.durationNanos;
-        }
-    }
-    if (mDebug)
-        LOG(INFO) << "actual = " << actualWorkDurationNanos
-                  << " ns, target = " << targetWorkDurationNanos
-                  << " ns, last_boost = " << mTLBoostSum;
-    if (actualWorkDurationNanos >= mThresholdNanos) {
-        taskLoadBoost(LOAD_UP);
-        mConsecutiveDownCount = 0;
-    } else {
-        if (mConsecutiveDownCount < 3) {
-            mConsecutiveDownCount++;
-        }
-        if (mConsecutiveDownCount >= 3) {
-            taskLoadBoost(LOAD_DOWN);
-        }
-    }
     return ndk::ScopedAStatus::ok();
 }
 
